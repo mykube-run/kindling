@@ -41,7 +41,7 @@ func TestFileManager(t *testing.T) {
 		newConf = func() interface{} {
 			return new(testConfig)
 		}
-		handler = ConfigEventHandler{
+		handler = UpdateHandler{
 			Name: "test",
 			Handle: func(old, new interface{}) error {
 				if v, ok := new.(*testConfig); !ok {
@@ -91,7 +91,7 @@ func TestConsulManager(t *testing.T) {
 		newConf = func() interface{} {
 			return new(testConfig)
 		}
-		handler = ConfigEventHandler{
+		handler = UpdateHandler{
 			Name: "test",
 			Handle: func(old, new interface{}) error {
 				if v, ok := new.(*testConfig); !ok {
@@ -149,7 +149,7 @@ func TestEtcdManager(t *testing.T) {
 		newConf = func() interface{} {
 			return new(testConfig)
 		}
-		handler = ConfigEventHandler{
+		handler = UpdateHandler{
 			Name: "test",
 			Handle: func(old, new interface{}) error {
 				if v, ok := new.(*testConfig); !ok {

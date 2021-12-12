@@ -19,7 +19,7 @@ var (
 	snapshot = func() ExampleConfig {
 		return *c
 	}
-	hdl = kconfig.ConfigEventHandler{
+	hdl = kconfig.UpdateHandler{
 		Name: "example",
 		Handle: func(old, new interface{}) error {
 			fmt.Println(old)

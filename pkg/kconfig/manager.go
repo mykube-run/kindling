@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type ConfigEventHandler struct {
+type UpdateHandler struct {
 	Name   string
 	Handle func(old, new interface{}) error
 }
@@ -21,7 +21,7 @@ type Manager struct {
 	src      types.ConfigSource
 	conf     interface{}
 	newConf  func() interface{}
-	handlers []ConfigEventHandler
+	handlers []UpdateHandler
 	lg       types.Logger
 
 	unmarshalFn func([]byte, interface{}) error
@@ -34,13 +34,13 @@ type Manager struct {
 // conf must be a non nil pointer to the config, any changes will be populated back.
 // newConf must returns a non nil config pointer.
 // hdl is a series of custom update handlers, will be called sequentially after Manager is created and when config is changed.
-func New(conf interface{}, newConf func() interface{}, hdl ...ConfigEventHandler) (*Manager, error) {
+func New(conf interface{}, newConf func() interface{}, hdl ...UpdateHandler) (*Manager, error) {
 	opt := NewBootstrapOptionFromEnvFlag()
 	return NewWithOption(conf, newConf, opt, hdl...)
 }
 
 // NewWithOption creates a new Manager instance with given BootstrapOption.
-func NewWithOption(conf interface{}, newConf func() interface{}, opt *BootstrapOption, hdl ...ConfigEventHandler) (*Manager, error) {
+func NewWithOption(conf interface{}, newConf func() interface{}, opt *BootstrapOption, hdl ...UpdateHandler) (*Manager, error) {
 	if err := validateParams(conf, newConf, opt); err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func NewWithOption(conf interface{}, newConf func() interface{}, opt *BootstrapO
 }
 
 // Register registers extra event handlers after creation
-func (m *Manager) Register(hdl ...ConfigEventHandler) *Manager {
+func (m *Manager) Register(hdl ...UpdateHandler) *Manager {
 	m.handlers = append(m.handlers, hdl...)
 	return m
 }
@@ -170,7 +170,7 @@ func validateParams(conf interface{}, newConf func() interface{}, opt *Bootstrap
 }
 
 func newManager(conf interface{}, newConf func() interface{},
-	opt *BootstrapOption, src types.ConfigSource, hdl ...ConfigEventHandler,
+	opt *BootstrapOption, src types.ConfigSource, hdl ...UpdateHandler,
 ) *Manager {
 	m := &Manager{
 		opt:      opt,
