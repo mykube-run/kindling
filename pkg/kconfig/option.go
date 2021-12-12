@@ -10,8 +10,9 @@ import (
 	"time"
 )
 
+// BootstrapOption is used to specify config source (and other additional) options.
 type BootstrapOption struct {
-	Type            ConfigSourceType
+	Type            types.ConfigSourceType
 	Format          string
 	Addrs           []string
 	Namespace       string
@@ -37,7 +38,7 @@ func NewBootstrapOptionFromEnvFlag() *BootstrapOption {
 }
 
 // WithType specifies config source type
-func (opt *BootstrapOption) WithType(typ ConfigSourceType) *BootstrapOption {
+func (opt *BootstrapOption) WithType(typ types.ConfigSourceType) *BootstrapOption {
 	opt.Type = typ
 	return opt
 }
@@ -99,7 +100,7 @@ func (opt *BootstrapOption) Validate() error {
 		return fmt.Errorf("config source type not provided")
 	}
 	switch opt.Type {
-	case Consul, Etcd:
+	case types.Consul, types.Etcd:
 		if len(opt.Addrs) == 0 {
 			return fmt.Errorf("config source address not provided")
 		}
@@ -128,7 +129,7 @@ func (opt *BootstrapOption) parseEnvFlags() {
 	)
 	flag.Parse()
 
-	otyp := ConfigSourceType(utils.If(*typ != "", *typ, os.Getenv("CONF_SRC_TYPE")).(string))
+	otyp := types.ConfigSourceType(utils.If(*typ != "", *typ, os.Getenv("CONF_SRC_TYPE")).(string))
 	oformat := utils.If(*format != "", *format, os.Getenv("CONF_SRC_FORMAT")).(string)
 	oip := utils.If(*ip != "", *ip, os.Getenv("CONF_SRC_IP")).(string)
 	oport := utils.If(*port != "", *port, os.Getenv("CONF_SRC_PORT")).(string)

@@ -7,21 +7,14 @@ import (
 	"github.com/mykube-run/kindling/pkg/types"
 	"github.com/mykube-run/kindling/pkg/utils"
 	"gopkg.in/yaml.v3"
-	"reflect"
 	"time"
 )
-
-type UpdateHandler struct {
-	Name   string
-	Handle func(old, new interface{}) error
-}
 
 type Manager struct {
 	opt      *BootstrapOption
 	src      types.ConfigSource
-	conf     interface{}
-	newConf  func() interface{}
-	handlers []UpdateHandler
+	proxy    types.ConfigProxy
+	handlers []types.ConfigUpdateHandler
 	lg       types.Logger
 
 	unmarshalFn func([]byte, interface{}) error
@@ -30,18 +23,16 @@ type Manager struct {
 }
 
 // New creates a new Manager instance, which will automatically read BootstrapOption from environment & flags.
-// Once created, Manager will read config source and update given config instance.
-// conf must be a non nil pointer to the config, any changes will be populated back.
-// newConf must returns a non nil config pointer.
+// Once created, Manager will read config data and update config with the help of types.ConfigProxy.
 // hdl is a series of custom update handlers, will be called sequentially after Manager is created and when config is changed.
-func New(conf interface{}, newConf func() interface{}, hdl ...UpdateHandler) (*Manager, error) {
+func New(proxy types.ConfigProxy, hdl ...types.ConfigUpdateHandler) (*Manager, error) {
 	opt := NewBootstrapOptionFromEnvFlag()
-	return NewWithOption(conf, newConf, opt, hdl...)
+	return NewWithOption(proxy, opt, hdl...)
 }
 
 // NewWithOption creates a new Manager instance with given BootstrapOption.
-func NewWithOption(conf interface{}, newConf func() interface{}, opt *BootstrapOption, hdl ...UpdateHandler) (*Manager, error) {
-	if err := validateParams(conf, newConf, opt); err != nil {
+func NewWithOption(proxy types.ConfigProxy, opt *BootstrapOption, hdl ...types.ConfigUpdateHandler) (*Manager, error) {
+	if err := validateParams(proxy, opt); err != nil {
 		return nil, err
 	}
 	src, err := NewConfigSource(opt)
@@ -49,7 +40,7 @@ func NewWithOption(conf interface{}, newConf func() interface{}, opt *BootstrapO
 		return nil, fmt.Errorf("failed to create config source: %w", err)
 	}
 
-	m := newManager(conf, newConf, opt, src, hdl...)
+	m := newManager(proxy, opt, src, hdl...)
 	if err = m.readAndUpdate(); err != nil {
 		return nil, err
 	}
@@ -57,9 +48,22 @@ func NewWithOption(conf interface{}, newConf func() interface{}, opt *BootstrapO
 }
 
 // Register registers extra event handlers after creation
-func (m *Manager) Register(hdl ...UpdateHandler) *Manager {
+func (m *Manager) Register(hdl ...types.ConfigUpdateHandler) *Manager {
 	m.handlers = append(m.handlers, hdl...)
 	return m
+}
+
+// readAndUpdate is called after Manager is created
+func (m *Manager) readAndUpdate() error {
+	byt, err := m.src.Read()
+	if err != nil {
+		return fmt.Errorf("error reading config: %w", err)
+	}
+	evt := types.Event{
+		Md5:  utils.Md5(byt),
+		Data: byt,
+	}
+	return m.onUpdate(evt)
 }
 
 // onUpdate handles config update event
@@ -74,23 +78,29 @@ func (m *Manager) onUpdate(evt types.Event) error {
 		return nil
 	}
 
-	// Read in new config
-	conf := m.newConf()
-	if err := m.unmarshal(evt.Data, conf); err != nil {
-		return fmt.Errorf("error unmarshalling new config: %w", err)
+	// Construct a config populate closure function
+	fn, err := m.populateFunc(evt.Data)
+	if err != nil {
+		return fmt.Errorf("error creating config populate function: %w", err)
+	}
+
+	// Create a new proxy and populate it
+	cur := m.proxy.New()
+	if err = cur.Populate(fn); err != nil {
+		return fmt.Errorf("error populating new config: %w", err)
 	}
 
 	// Handle config change
 	for _, hdl := range m.handlers {
-		if err := hdl.Handle(m.conf, conf); err != nil {
+		if err := hdl.Handle(m.proxy.Get(), cur.Get()); err != nil {
 			return fmt.Errorf("handler [%s] failed: %w", hdl.Name, err)
 		}
 		m.lg.Trace(fmt.Sprintf("handler [%s] finished", hdl.Name))
 	}
 
 	// Populate the new config back to original config
-	if err := m.unmarshal(evt.Data, m.conf); err != nil {
-		return fmt.Errorf("error unmarshalling new config: %w", err)
+	if err = m.proxy.Populate(fn); err != nil {
+		return fmt.Errorf("error populating config: %w", err)
 	}
 	m.lastUpdate = time.Now()
 	m.lastMd5 = evt.Md5
@@ -98,35 +108,26 @@ func (m *Manager) onUpdate(evt types.Event) error {
 	return nil
 }
 
-func (m *Manager) unmarshal(byt []byte, v interface{}) error {
+func (m *Manager) populateFunc(byt []byte) (func(interface{}) error, error) {
+	// Unmarshal config bytes into a temporary map, which will be used by mapstructure decoder later
 	var tmp map[string]interface{}
 	if err := m.unmarshalFn(byt, &tmp); err != nil {
-		return err
+		return nil, err
 	}
 
-	dc := &mapstructure.DecoderConfig{
-		WeaklyTypedInput: true,
-		ZeroFields:       true, // this must be set to avoid array/map being merged
-		Result:           v,
+	fn := func(v interface{}) error {
+		dc := &mapstructure.DecoderConfig{
+			WeaklyTypedInput: true,
+			ZeroFields:       true, // this must be set to avoid array/map being merged
+			Result:           v,
+		}
+		decoder, err := mapstructure.NewDecoder(dc)
+		if err != nil {
+			return err
+		}
+		return decoder.Decode(tmp)
 	}
-	decoder, err := mapstructure.NewDecoder(dc)
-	if err != nil {
-		return err
-	}
-	return decoder.Decode(tmp)
-}
-
-// readAndUpdate is called after Manager is created
-func (m *Manager) readAndUpdate() error {
-	byt, err := m.src.Read()
-	if err != nil {
-		return fmt.Errorf("error reading config: %w", err)
-	}
-	evt := types.Event{
-		Md5:  utils.Md5(byt),
-		Data: byt,
-	}
-	return m.onUpdate(evt)
+	return fn, nil
 }
 
 func (m *Manager) watch() error {
@@ -152,13 +153,9 @@ func (m *Manager) watch() error {
 	return nil
 }
 
-func validateParams(conf interface{}, newConf func() interface{}, opt *BootstrapOption) error {
-	if conf == nil || reflect.TypeOf(conf).Kind() != reflect.Ptr {
-		return fmt.Errorf("config must be a non nil pointer")
-	}
-	tmp := newConf()
-	if tmp == nil || reflect.TypeOf(tmp).Kind() != reflect.Ptr {
-		return fmt.Errorf("newConf must return a non nil pointer")
+func validateParams(proxy types.ConfigProxy, opt *BootstrapOption) error {
+	if proxy.Get() == nil {
+		return fmt.Errorf("config proxy should always return a valid config")
 	}
 	if opt == nil {
 		return fmt.Errorf("bootstrap option must be provided")
@@ -169,14 +166,12 @@ func validateParams(conf interface{}, newConf func() interface{}, opt *Bootstrap
 	return nil
 }
 
-func newManager(conf interface{}, newConf func() interface{},
-	opt *BootstrapOption, src types.ConfigSource, hdl ...UpdateHandler,
+func newManager(proxy types.ConfigProxy, opt *BootstrapOption, src types.ConfigSource, hdl ...types.ConfigUpdateHandler,
 ) *Manager {
 	m := &Manager{
 		opt:      opt,
 		src:      src,
-		conf:     conf,
-		newConf:  newConf,
+		proxy:    proxy,
 		handlers: hdl,
 		lg:       opt.Logger,
 	}
