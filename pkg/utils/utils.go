@@ -3,7 +3,6 @@ package utils
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"strings"
 )
 
 func Md5(byt []byte) string {
@@ -17,14 +16,4 @@ func If(cond bool, tv, fv interface{}) interface{} {
 		return tv
 	}
 	return fv
-}
-
-func ParseCommaSeparated(in string) []string {
-	spl := strings.Split(in, ",")
-	out := make([]string, 0)
-	for _, v := range spl {
-		vc := strings.ReplaceAll(v, " ", "")
-		out = append(out, vc)
-	}
-	return out
 }

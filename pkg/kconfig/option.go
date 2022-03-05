@@ -22,7 +22,7 @@ type BootstrapOption struct {
 	Logger          types.Logger
 }
 
-// NewBootstrapOption initializes a kconfig option
+// NewBootstrapOption initializes a kconfig bootstrap option
 func NewBootstrapOption() *BootstrapOption {
 	return &BootstrapOption{
 		Format:          "json",
@@ -31,6 +31,9 @@ func NewBootstrapOption() *BootstrapOption {
 	}
 }
 
+// NewBootstrapOptionFromEnvFlag initializes a kconfig bootstrap option from environments & flags.
+// Flag value has higher priority when both given in environments & flags.
+// Note: Flags are parsed once this function is called, therefore user should call it after defining custom flags.
 func NewBootstrapOptionFromEnvFlag() *BootstrapOption {
 	opt := NewBootstrapOption()
 	opt.parseEnvFlags()

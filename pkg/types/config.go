@@ -16,3 +16,11 @@ type ConfigUpdateHandler struct {
 	Name   string
 	Handle func(prev, cur interface{}) error
 }
+
+// NOOPHandler does nothing on config update
+var NOOPHandler = ConfigUpdateHandler{
+	Name: "noop",
+	Handle: func(prev, cur interface{}) error {
+		return nil
+	},
+}

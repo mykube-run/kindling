@@ -6,33 +6,8 @@ import (
 	"github.com/mykube-run/kindling/pkg/kconfig"
 	"github.com/mykube-run/kindling/pkg/types"
 	"log"
+	"time"
 )
-
-var Proxy = &proxy{c: new(ExampleConfig)}
-
-type proxy struct {
-	c *ExampleConfig
-}
-
-func (p *proxy) Get() interface{} {
-	return *p.c
-}
-
-func (p *proxy) Populate(fn func(interface{}) error) error {
-	return fn(p.c)
-}
-
-func (p *proxy) New() types.ConfigProxy {
-	return &proxy{c: new(ExampleConfig)}
-}
-
-func (p *proxy) Value() ExampleConfig {
-	return *p.c
-}
-
-type ExampleConfig struct {
-	IntVal int `mapstructure:"int"`
-}
 
 var (
 	hdl = types.ConfigUpdateHandler{
@@ -43,7 +18,8 @@ var (
 			return nil
 		},
 	}
-	custom = flag.Int("custom", 0, "User application custom config")
+	custom  = flag.Int("custom", 0, "User application custom config")
+	seconds = flag.Int("seconds", 10, "Seconds to exit this example")
 )
 
 func main() {
@@ -52,5 +28,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create new config manager: %v", err)
 	}
-	fmt.Println(Proxy.Get().(ExampleConfig).IntVal, Proxy.Value().IntVal)
+	fmt.Printf("Original config: %v (%v, %v)\n",
+		Proxy.Get().(ExampleConfig).IntVal, Proxy.Value().IntVal, IntVal())
+
+	time.Sleep(time.Second * time.Duration(*seconds))
 }

@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/consul/api"
+	"github.com/mykube-run/kindling/pkg/kconfig/source"
 	"github.com/mykube-run/kindling/pkg/types"
+	"github.com/nacos-group/nacos-sdk-go/clients"
+	"github.com/nacos-group/nacos-sdk-go/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/vo"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -57,8 +61,11 @@ const (
 
 	filename   = "/tmp/kconfig-test.json"
 	key        = "kconfig-test"
+	namespace  = "kconfig" // Nacos namespace
+	group      = "test"    // Nacos group
 	consulAddr = "localhost:8500"
 	etcdAddr   = "localhost:2379"
+	nacosAddr  = "localhost:8848"
 )
 
 // Tests
@@ -90,7 +97,7 @@ func TestFileManager(t *testing.T) {
 	opt := NewBootstrapOption().WithType(types.File).WithKey(filename)
 	_, err := NewWithOption(Proxy, opt, handler)
 	if err != nil {
-		t.Fatalf("error initializing Manager: %v", err)
+		t.Fatalf("error initializing manager: %v", err)
 	}
 	checkConf1(Proxy.Get().(testConfig), t)
 
@@ -140,7 +147,7 @@ func TestConsulManager(t *testing.T) {
 	opt := NewBootstrapOption().WithType(types.Consul).WithAddr(consulAddr).WithKey(key)
 	_, err = NewWithOption(Proxy, opt, handler)
 	if err != nil {
-		t.Fatalf("error initializing Manager: %v", err)
+		t.Fatalf("error initializing manager: %v", err)
 	}
 	checkConf1(Proxy.Get().(testConfig), t)
 
@@ -192,13 +199,86 @@ func TestEtcdManager(t *testing.T) {
 	opt := NewBootstrapOption().WithType(types.Etcd).WithAddr(etcdAddr).WithKey(key)
 	_, err = NewWithOption(Proxy, opt, handler)
 	if err != nil {
-		t.Fatalf("error initializing Manager: %v", err)
+		t.Fatalf("error initializing manager: %v", err)
 	}
 	checkConf1(Proxy.Get().(testConfig), t)
 
 	// Change the config
 	time.Sleep(time.Second * 5)
 	_, err = client.KV.Put(ctx, key, conf2)
+	if err != nil {
+		t.Fatalf("failed to write new config: %v", err)
+	}
+	time.Sleep(time.Second)
+	checkConf2(Proxy.Get().(testConfig), t)
+
+	if intVal != 36 {
+		t.Fatalf("outer int val should be changed")
+	}
+}
+
+func TestNacosManager(t *testing.T) {
+	var (
+		intVal  = 0
+		handler = types.ConfigUpdateHandler{
+			Name: "test",
+			Handle: func(prev, cur interface{}) error {
+				if v, ok := cur.(testConfig); !ok {
+					fmt.Printf("%+v\n", v)
+					return fmt.Errorf("invalid config type")
+				} else {
+					intVal = v.IntVal
+					return nil
+				}
+			},
+		}
+	)
+	log.Logger = log.Logger.Level(zerolog.TraceLevel)
+
+	// Prepare the config
+	scs, err := source.ParseNacosAddrs([]string{nacosAddr})
+	if err != nil {
+		t.Fatalf("failed to parse nacos addresses: %v", err)
+	}
+	cfg := constant.ClientConfig{
+		NamespaceId:         namespace,
+		TimeoutMs:           source.NacosTimeout,
+		NotLoadCacheAtStart: true,
+		LogDir:              source.NacosLogDir,
+		CacheDir:            source.NacosCacheDir,
+		LogLevel:            "trace",
+	}
+	client, err := clients.NewConfigClient(vo.NacosClientParam{
+		ClientConfig:  &cfg,
+		ServerConfigs: scs,
+	})
+	if err != nil {
+		t.Fatalf("failed to create nacos client: %v", err)
+	}
+	param := vo.ConfigParam{
+		DataId: key,
+		Group:  group,
+	}
+	_, _ = client.DeleteConfig(param)
+	param.Content = conf1
+	_, err = client.PublishConfig(param)
+	if err != nil {
+		t.Fatalf("failed to write original config: %v", err)
+	}
+
+	// Test creating a new Manager
+	opt := NewBootstrapOption().WithType(types.Nacos).WithAddr(nacosAddr).
+		WithNamespace(namespace).WithGroup(group).WithKey(key)
+	_, err = NewWithOption(Proxy, opt, handler)
+	if err != nil {
+		t.Fatalf("error initializing manager: %v", err)
+	}
+	checkConf1(Proxy.Get().(testConfig), t)
+
+	// Change the config
+	time.Sleep(time.Second * 5)
+	param.Content = conf2
+	_, err = client.PublishConfig(param)
 	if err != nil {
 		t.Fatalf("failed to write new config: %v", err)
 	}

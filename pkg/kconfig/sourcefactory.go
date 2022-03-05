@@ -14,6 +14,8 @@ func NewConfigSource(opt *BootstrapOption) (types.ConfigSource, error) {
 		return source.NewConsulSource(opt.Addrs[0], opt.Group, opt.Key, opt.Logger)
 	case types.Etcd:
 		return source.NewEtcdSource(opt.Addrs, opt.Group, opt.Key, opt.Logger)
+	case types.Nacos:
+		return source.NewNacosSource(opt.Addrs, opt.Namespace, opt.Group, opt.Key, opt.Logger)
 	default:
 		return nil, fmt.Errorf("unsupported config source type: %v", opt.Type)
 	}

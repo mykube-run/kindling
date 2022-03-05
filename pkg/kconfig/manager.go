@@ -92,7 +92,7 @@ func (m *Manager) onUpdate(evt types.Event) error {
 
 	// Handle config change
 	for _, hdl := range m.handlers {
-		if err := hdl.Handle(m.proxy.Get(), cur.Get()); err != nil {
+		if err = hdl.Handle(m.proxy.Get(), cur.Get()); err != nil {
 			return fmt.Errorf("handler [%s] failed: %w", hdl.Name, err)
 		}
 		m.lg.Trace(fmt.Sprintf("handler [%s] finished", hdl.Name))
@@ -112,7 +112,7 @@ func (m *Manager) populateFunc(byt []byte) (func(interface{}) error, error) {
 	// Unmarshal config bytes into a temporary map, which will be used by mapstructure decoder later
 	var tmp map[string]interface{}
 	if err := m.unmarshalFn(byt, &tmp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unmarshalling config: %w", err)
 	}
 
 	fn := func(v interface{}) error {

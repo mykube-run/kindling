@@ -24,7 +24,6 @@ func NewConsulSource(addr string, group, key string, lg types.Logger) (types.Con
 	if err != nil {
 		return nil, fmt.Errorf("failed to create consul client: %w", err)
 	}
-	client.Namespaces()
 
 	s := &Consul{
 		lg:     lg,
