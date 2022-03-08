@@ -22,7 +22,7 @@ type BootstrapOption struct {
 	Logger          types.Logger
 }
 
-// NewBootstrapOption initializes a kconfig bootstrap option
+// NewBootstrapOption initializes a kBootstrap config option
 func NewBootstrapOption() *BootstrapOption {
 	return &BootstrapOption{
 		Format:          "json",
@@ -31,9 +31,9 @@ func NewBootstrapOption() *BootstrapOption {
 	}
 }
 
-// NewBootstrapOptionFromEnvFlag initializes a kconfig bootstrap option from environments & flags.
+// NewBootstrapOptionFromEnvFlag initializes a kBootstrap config option from environments & flags.
 // Flag value has higher priority when both given in environments & flags.
-// Note: Flags are parsed once this function is called, therefore user should call it after defining custom flags.
+// Note: Flags are parsed once this function is called.
 func NewBootstrapOptionFromEnvFlag() *BootstrapOption {
 	opt := NewBootstrapOption()
 	opt.parseEnvFlags()
@@ -118,29 +118,32 @@ func (opt *BootstrapOption) Validate() error {
 	return nil
 }
 
-func (opt *BootstrapOption) parseEnvFlags() {
-	var (
-		typ       = flag.String("conf-src-type", "", "Config bootstrap option, config source type. Available options: file, etcd, consul, nacos.")
-		format    = flag.String("conf-src-format", "", "Config bootstrap option, config format. Available options: json, yaml.")
-		ip        = flag.String("conf-src-ip", "", "Config bootstrap option, config source ip, optional.")
-		port      = flag.String("conf-src-port", "", "Config bootstrap option, config source port, only required when conf-ip is provided.")
-		addr      = flag.String("conf-src-addr", "", "Config bootstrap option, config source address, multiple addresses can be given comma separated, e.g. 'ip1:2379,ip2:2379'.")
-		namespace = flag.String("conf-src-namespace", "", "Config bootstrap option, config source namespace, optional.")
-		group     = flag.String("conf-src-group", "", "Config bootstrap option, config source group, optional.")
-		key       = flag.String("conf-src-key", "", "Config bootstrap option, config source key, required.")
-		interval  = flag.String("conf-src-interval", "", "Config bootstrap option, minimal update interval in seconds, default to 5, optional.")
-	)
-	flag.Parse()
+var (
+	typ       = flag.String("conf-type", "", "Bootstrap config option, config source type. Available options: file, etcd, consul, nacos.")
+	format    = flag.String("conf-format", "", "Bootstrap config option, config format. Available options: json, yaml.")
+	ip        = flag.String("conf-ip", "", "Bootstrap config option, config source ip, optional.")
+	port      = flag.String("conf-port", "", "Bootstrap config option, config source port, only required when conf-ip is provided.")
+	addr      = flag.String("conf-addr", "", "Bootstrap config option, config source address, multiple addresses can be given comma separated, e.g. 'ip1:2379,ip2:2379'.")
+	namespace = flag.String("conf-namespace", "", "Bootstrap config option, config namespace, optional.")
+	group     = flag.String("conf-group", "", "Bootstrap config option, config group, optional.")
+	key       = flag.String("conf-key", "", "Bootstrap config option, config key, required.")
+	interval  = flag.String("conf-interval", "", "Bootstrap config option, minimal update interval in seconds, default to 5, optional.")
+)
 
-	otyp := types.ConfigSourceType(utils.If(*typ != "", *typ, os.Getenv("CONF_SRC_TYPE")).(string))
-	oformat := utils.If(*format != "", *format, os.Getenv("CONF_SRC_FORMAT")).(string)
-	oip := utils.If(*ip != "", *ip, os.Getenv("CONF_SRC_IP")).(string)
-	oport := utils.If(*port != "", *port, os.Getenv("CONF_SRC_PORT")).(string)
-	oaddr := utils.If(*addr != "", *addr, os.Getenv("CONF_SRC_ADDR")).(string)
-	ons := utils.If(*namespace != "", *namespace, os.Getenv("CONF_SRC_NAMESPACE")).(string)
-	ogroup := utils.If(*group != "", *group, os.Getenv("CONF_SRC_GROUP")).(string)
-	okey := utils.If(*key != "", *key, os.Getenv("CONF_SRC_KEY")).(string)
-	ointerval := utils.If(*interval != "", *interval, os.Getenv("CONF_SRC_INTERVAL")).(string)
+func (opt *BootstrapOption) parseEnvFlags() {
+	if !flag.Parsed() {
+		flag.Parse()
+	}
+
+	otyp := types.ConfigSourceType(utils.If(*typ != "", *typ, os.Getenv("CONF_TYPE")).(string))
+	oformat := utils.If(*format != "", *format, os.Getenv("CONF_FORMAT")).(string)
+	oip := utils.If(*ip != "", *ip, os.Getenv("CONF_IP")).(string)
+	oport := utils.If(*port != "", *port, os.Getenv("CONF_PORT")).(string)
+	oaddr := utils.If(*addr != "", *addr, os.Getenv("CONF_ADDR")).(string)
+	ons := utils.If(*namespace != "", *namespace, os.Getenv("CONF_NAMESPACE")).(string)
+	ogroup := utils.If(*group != "", *group, os.Getenv("CONF_GROUP")).(string)
+	okey := utils.If(*key != "", *key, os.Getenv("CONF_KEY")).(string)
+	ointerval := utils.If(*interval != "", *interval, os.Getenv("CONF_INTERVAL")).(string)
 
 	opt.Type = otyp
 	opt.Namespace = ons

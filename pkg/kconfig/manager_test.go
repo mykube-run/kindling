@@ -298,7 +298,7 @@ func TestNewBootstrapOptionFromEnvFlag1(t *testing.T) {
 }
 
 func TestNewBootstrapOptionFromEnvFlag2(t *testing.T) {
-	_ = os.Setenv("CONF_SRC_TYPE", "file")
+	_ = os.Setenv("CONF_TYPE", "file")
 	opt := NewBootstrapOptionFromEnvFlag()
 	if opt.Type != "file" {
 		t.Fatalf("type should be set to 'file'")

@@ -92,7 +92,7 @@ func (m *Manager) onUpdate(evt types.Event) error {
 
 	// Handle config change
 	for _, hdl := range m.handlers {
-		if err = hdl.Handle(m.proxy.Get(), cur.Get()); err != nil {
+		if err = withRecover(hdl, m.proxy.Get(), cur.Get()); err != nil {
 			return fmt.Errorf("handler [%s] failed: %w", hdl.Name, err)
 		}
 		m.lg.Trace(fmt.Sprintf("handler [%s] finished", hdl.Name))
@@ -182,4 +182,13 @@ func newManager(proxy types.ConfigProxy, opt *BootstrapOption, src types.ConfigS
 		m.unmarshalFn = yaml.Unmarshal
 	}
 	return m
+}
+
+func withRecover(hdl types.ConfigUpdateHandler, prev, cur interface{}) (err error) {
+	defer func() {
+		if re := recover(); re != nil {
+			err = fmt.Errorf("panic during config update: %v", re)
+		}
+	}()
+	return hdl.Handle(prev, cur)
 }
