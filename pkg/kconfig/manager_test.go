@@ -60,9 +60,9 @@ const (
 	conf2 = `{"int": 36, "str": "another string", "arr": "foo", "map": {"bar": 36}, "embed": {"int": 36}, "child": {"int": 36, "str": "bar"}}`
 
 	filename   = "/tmp/kconfig-test.json"
-	key        = "kconfig-test"
-	namespace  = "kconfig" // Nacos namespace
-	group      = "test"    // Nacos group
+	k          = "kconfig-test" // File name, Consul/Etcd/Nacos key
+	ns         = "kconfig"      // Nacos namespace
+	g          = "test"         // Nacos group
 	consulAddr = "localhost:8500"
 	etcdAddr   = "localhost:2379"
 	nacosAddr  = "localhost:8848"
@@ -136,15 +136,15 @@ func TestConsulManager(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create consul client: %v", err)
 	}
-	_, _ = client.KV().Delete(key, nil)
-	pair := api.KVPair{Key: key, Value: []byte(conf1)}
+	_, _ = client.KV().Delete(k, nil)
+	pair := api.KVPair{Key: k, Value: []byte(conf1)}
 	_, err = client.KV().Put(&pair, nil)
 	if err != nil {
 		t.Fatalf("failed to write original config: %v", err)
 	}
 
 	// Test creating a new Manager
-	opt := NewBootstrapOption().WithType(types.Consul).WithAddr(consulAddr).WithKey(key)
+	opt := NewBootstrapOption().WithType(types.Consul).WithAddr(consulAddr).WithKey(k)
 	_, err = NewWithOption(Proxy, opt, handler)
 	if err != nil {
 		t.Fatalf("error initializing manager: %v", err)
@@ -153,7 +153,7 @@ func TestConsulManager(t *testing.T) {
 
 	// Change the config
 	time.Sleep(time.Second * 5)
-	pair = api.KVPair{Key: key, Value: []byte(conf2)}
+	pair = api.KVPair{Key: k, Value: []byte(conf2)}
 	_, err = client.KV().Put(&pair, nil)
 	if err != nil {
 		t.Fatalf("failed to update new config: %v", err)
@@ -189,14 +189,14 @@ func TestEtcdManager(t *testing.T) {
 		t.Fatalf("faild to create etcd client: %v", err)
 	}
 	ctx := context.TODO()
-	_, _ = client.KV.Delete(ctx, key)
-	_, err = client.KV.Put(ctx, key, conf1)
+	_, _ = client.KV.Delete(ctx, k)
+	_, err = client.KV.Put(ctx, k, conf1)
 	if err != nil {
 		t.Fatalf("failed to write original config: %v", err)
 	}
 
 	// Test creating a new Manager
-	opt := NewBootstrapOption().WithType(types.Etcd).WithAddr(etcdAddr).WithKey(key)
+	opt := NewBootstrapOption().WithType(types.Etcd).WithAddr(etcdAddr).WithKey(k)
 	_, err = NewWithOption(Proxy, opt, handler)
 	if err != nil {
 		t.Fatalf("error initializing manager: %v", err)
@@ -205,7 +205,7 @@ func TestEtcdManager(t *testing.T) {
 
 	// Change the config
 	time.Sleep(time.Second * 5)
-	_, err = client.KV.Put(ctx, key, conf2)
+	_, err = client.KV.Put(ctx, k, conf2)
 	if err != nil {
 		t.Fatalf("failed to write new config: %v", err)
 	}
@@ -241,7 +241,7 @@ func TestNacosManager(t *testing.T) {
 		t.Fatalf("failed to parse nacos addresses: %v", err)
 	}
 	cfg := constant.ClientConfig{
-		NamespaceId:         namespace,
+		NamespaceId:         ns,
 		TimeoutMs:           source.NacosTimeout,
 		NotLoadCacheAtStart: true,
 		LogDir:              source.NacosLogDir,
@@ -256,8 +256,8 @@ func TestNacosManager(t *testing.T) {
 		t.Fatalf("failed to create nacos client: %v", err)
 	}
 	param := vo.ConfigParam{
-		DataId: key,
-		Group:  group,
+		DataId: k,
+		Group:  g,
 	}
 	_, _ = client.DeleteConfig(param)
 	param.Content = conf1
@@ -268,7 +268,7 @@ func TestNacosManager(t *testing.T) {
 
 	// Test creating a new Manager
 	opt := NewBootstrapOption().WithType(types.Nacos).WithAddr(nacosAddr).
-		WithNamespace(namespace).WithGroup(group).WithKey(key)
+		WithNamespace(ns).WithGroup(g).WithKey(k)
 	_, err = NewWithOption(Proxy, opt, handler)
 	if err != nil {
 		t.Fatalf("error initializing manager: %v", err)
