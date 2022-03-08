@@ -22,7 +22,7 @@ type BootstrapOption struct {
 	Logger          types.Logger
 }
 
-// NewBootstrapOption initializes a kBootstrap config option
+// NewBootstrapOption initializes a bootstrap config option
 func NewBootstrapOption() *BootstrapOption {
 	return &BootstrapOption{
 		Format:          "json",
@@ -31,7 +31,7 @@ func NewBootstrapOption() *BootstrapOption {
 	}
 }
 
-// NewBootstrapOptionFromEnvFlag initializes a kBootstrap config option from environments & flags.
+// NewBootstrapOptionFromEnvFlag initializes a bootstrap config option from environments & flags.
 // Flag value has higher priority when both given in environments & flags.
 // Note: Flags are parsed once this function is called.
 func NewBootstrapOptionFromEnvFlag() *BootstrapOption {

@@ -5,10 +5,24 @@
 Rather than another config-parsing library, instead `kconfig` aims to:
 
 - load configurations from one centralized config provider
-- hot reload on configuration change
+- **hot reload & unmarshalling** on configuration change
 - encourage users to access configs via a single strong typing config instance
 
+Supported config format (as for now): 
+
+- json
+- yaml
+
+Supported config source:
+
+- File
+- Consul
+- Etcd
+- Nacos
+
 ### Getting started
+
+> Example code can be found at `cmd/kconfig-example`.
 
 #### 1. Implement `types.ConfigProxy`
 
