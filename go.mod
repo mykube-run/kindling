@@ -17,6 +17,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/nacos-group/nacos-sdk-go v1.1.0
 	github.com/panjf2000/ants/v2 v2.7.5 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/rs/zerolog v1.26.0
 	go.etcd.io/etcd/client/v3 v3.5.1
 	go.uber.org/atomic v1.9.0 // indirect
