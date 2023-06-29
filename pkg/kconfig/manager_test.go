@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/consul/api"
 	"github.com/mykube-run/kindling/pkg/kconfig/source"
-	"github.com/mykube-run/kindling/pkg/types"
 	"github.com/nacos-group/nacos-sdk-go/clients"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
@@ -33,7 +32,7 @@ func (p *proxy) Populate(fn func(interface{}) error) error {
 	return fn(p.c)
 }
 
-func (p *proxy) New() types.ConfigProxy {
+func (p *proxy) New() ConfigProxy {
 	return &proxy{c: new(testConfig)}
 }
 
@@ -73,7 +72,7 @@ const (
 func TestFileManager(t *testing.T) {
 	var (
 		intVal  = 0
-		handler = types.ConfigUpdateHandler{
+		handler = ConfigUpdateHandler{
 			Name: "test",
 			Handle: func(prev, cur interface{}) error {
 				if v, ok := cur.(testConfig); !ok {
@@ -94,7 +93,7 @@ func TestFileManager(t *testing.T) {
 	}
 
 	// Test creating a new Manager
-	opt := NewBootstrapOption().WithType(types.File).WithKey(filename)
+	opt := NewBootstrapOption().WithType(source.File).WithKey(filename)
 	_, err := NewWithOption(Proxy, opt, handler)
 	if err != nil {
 		t.Fatalf("error initializing manager: %v", err)
@@ -117,7 +116,7 @@ func TestFileManager(t *testing.T) {
 func TestConsulManager(t *testing.T) {
 	var (
 		intVal  = 0
-		handler = types.ConfigUpdateHandler{
+		handler = ConfigUpdateHandler{
 			Name: "test",
 			Handle: func(prev, cur interface{}) error {
 				if v, ok := cur.(testConfig); !ok {
@@ -144,7 +143,7 @@ func TestConsulManager(t *testing.T) {
 	}
 
 	// Test creating a new Manager
-	opt := NewBootstrapOption().WithType(types.Consul).WithAddr(consulAddr).WithKey(k)
+	opt := NewBootstrapOption().WithType(source.Consul).WithAddr(consulAddr).WithKey(k)
 	_, err = NewWithOption(Proxy, opt, handler)
 	if err != nil {
 		t.Fatalf("error initializing manager: %v", err)
@@ -169,7 +168,7 @@ func TestConsulManager(t *testing.T) {
 func TestEtcdManager(t *testing.T) {
 	var (
 		intVal  = 0
-		handler = types.ConfigUpdateHandler{
+		handler = ConfigUpdateHandler{
 			Name: "test",
 			Handle: func(prev, cur interface{}) error {
 				if v, ok := cur.(testConfig); !ok {
@@ -196,7 +195,7 @@ func TestEtcdManager(t *testing.T) {
 	}
 
 	// Test creating a new Manager
-	opt := NewBootstrapOption().WithType(types.Etcd).WithAddr(etcdAddr).WithKey(k)
+	opt := NewBootstrapOption().WithType(source.Etcd).WithAddr(etcdAddr).WithKey(k)
 	_, err = NewWithOption(Proxy, opt, handler)
 	if err != nil {
 		t.Fatalf("error initializing manager: %v", err)
@@ -220,7 +219,7 @@ func TestEtcdManager(t *testing.T) {
 func TestNacosManager(t *testing.T) {
 	var (
 		intVal  = 0
-		handler = types.ConfigUpdateHandler{
+		handler = ConfigUpdateHandler{
 			Name: "test",
 			Handle: func(prev, cur interface{}) error {
 				if v, ok := cur.(testConfig); !ok {
@@ -267,7 +266,7 @@ func TestNacosManager(t *testing.T) {
 	}
 
 	// Test creating a new Manager
-	opt := NewBootstrapOption().WithType(types.Nacos).WithAddr(nacosAddr).
+	opt := NewBootstrapOption().WithType(source.Nacos).WithAddr(nacosAddr).
 		WithNamespace(ns).WithGroup(g).WithKey(k)
 	_, err = NewWithOption(Proxy, opt, handler)
 	if err != nil {

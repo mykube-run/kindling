@@ -3,18 +3,17 @@ package kconfig
 import (
 	"fmt"
 	"github.com/mykube-run/kindling/pkg/kconfig/source"
-	"github.com/mykube-run/kindling/pkg/types"
 )
 
-func NewConfigSource(opt *BootstrapOption) (types.ConfigSource, error) {
+func NewConfigSource(opt *BootstrapOption) (source.ConfigSource, error) {
 	switch opt.Type {
-	case types.File:
+	case source.File:
 		return source.NewFileSource(opt.Key, opt.Logger)
-	case types.Consul:
+	case source.Consul:
 		return source.NewConsulSource(opt.Addrs[0], opt.Group, opt.Key, opt.Logger)
-	case types.Etcd:
+	case source.Etcd:
 		return source.NewEtcdSource(opt.Addrs, opt.Group, opt.Key, opt.Logger)
-	case types.Nacos:
+	case source.Nacos:
 		return source.NewNacosSource(opt.Addrs, opt.Namespace, opt.Group, opt.Key, opt.Logger)
 	default:
 		return nil, fmt.Errorf("unsupported config source type: %v", opt.Type)

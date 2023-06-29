@@ -3,21 +3,21 @@ package source
 import (
 	"context"
 	"fmt"
-	"github.com/mykube-run/kindling/pkg/types"
+	"github.com/mykube-run/kindling/pkg/log"
 	"github.com/mykube-run/kindling/pkg/utils"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
 )
 
-type Etcd struct {
+type etcd struct {
 	key     string
-	eventC  chan types.Event
+	eventC  chan Event
 	closing bool
-	lg      types.Logger
+	lg      log.Logger
 	client  *clientv3.Client
 }
 
-func NewEtcdSource(addrs []string, group, key string, lg types.Logger) (types.ConfigSource, error) {
+func NewEtcdSource(addrs []string, group, key string, lg log.Logger) (ConfigSource, error) {
 	cfg := clientv3.Config{
 		Endpoints:            addrs,
 		AutoSyncInterval:     time.Minute,
@@ -31,16 +31,16 @@ func NewEtcdSource(addrs []string, group, key string, lg types.Logger) (types.Co
 	if err != nil {
 		return nil, fmt.Errorf("failed to create etcd client: %w", err)
 	}
-	s := &Etcd{
+	s := &etcd{
 		key:    genKey(group, key),
-		eventC: make(chan types.Event, 1),
+		eventC: make(chan Event, 1),
 		lg:     lg,
 		client: client,
 	}
 	return s, nil
 }
 
-func (s *Etcd) Read() ([]byte, error) {
+func (s *etcd) Read() ([]byte, error) {
 	ctx := context.Background()
 	resp, err := s.client.KV.Get(ctx, s.key)
 	if err != nil {
@@ -52,7 +52,7 @@ func (s *Etcd) Read() ([]byte, error) {
 	return resp.Kvs[0].Value, nil
 }
 
-func (s *Etcd) Watch() (<-chan types.Event, error) {
+func (s *etcd) Watch() (<-chan Event, error) {
 	c := s.client.Watch(context.Background(), s.key)
 	go func() {
 		for {
@@ -71,7 +71,7 @@ func (s *Etcd) Watch() (<-chan types.Event, error) {
 						continue
 					}
 
-					e := types.Event{
+					e := Event{
 						Md5:  utils.Md5(v.Kv.Value),
 						Data: v.Kv.Value,
 					}
@@ -88,7 +88,7 @@ func (s *Etcd) Watch() (<-chan types.Event, error) {
 	return s.eventC, nil
 }
 
-func (s *Etcd) Close() error {
+func (s *etcd) Close() error {
 	s.closing = true
 	close(s.eventC)
 	return nil

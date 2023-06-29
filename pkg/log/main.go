@@ -1,4 +1,4 @@
-package types
+package log
 
 import "github.com/rs/zerolog/log"
 
@@ -16,21 +16,21 @@ type logger struct {
 }
 
 func (lg *logger) Trace(msg string) {
-	log.Trace().Str("module", "kconfig").Msg(msg)
+	log.Trace().Msg(msg)
 }
 
 func (lg *logger) Debug(msg string) {
-	log.Debug().Str("module", "kconfig").Msg(msg)
+	log.Debug().Msg(msg)
 }
 
 func (lg *logger) Info(msg string) {
-	log.Info().Str("module", "kconfig").Msg(msg)
+	log.Info().Msg(msg)
 }
 
 func (lg *logger) Warn(msg string) {
-	log.Warn().Str("module", "kconfig").Msg(msg)
+	log.Warn().Msg(msg)
 }
 
 func (lg *logger) Error(msg string) {
-	log.Error().Str("module", "kconfig").Msg(msg)
+	log.Error().Msg(msg)
 }

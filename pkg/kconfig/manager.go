@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
-	"github.com/mykube-run/kindling/pkg/types"
+	"github.com/mykube-run/kindling/pkg/kconfig/source"
+	"github.com/mykube-run/kindling/pkg/log"
 	"github.com/mykube-run/kindling/pkg/utils"
 	"gopkg.in/yaml.v3"
 	"time"
@@ -12,10 +13,10 @@ import (
 
 type Manager struct {
 	opt      *BootstrapOption
-	src      types.ConfigSource
-	proxy    types.ConfigProxy
-	handlers []types.ConfigUpdateHandler
-	lg       types.Logger
+	src      source.ConfigSource
+	proxy    ConfigProxy
+	handlers []ConfigUpdateHandler
+	lg       log.Logger
 
 	unmarshalFn func([]byte, interface{}) error
 	lastUpdate  time.Time
@@ -25,13 +26,13 @@ type Manager struct {
 // New creates a new Manager instance, which will automatically read BootstrapOption from environment & flags.
 // Once created, Manager will read config data and update config with the help of types.ConfigProxy.
 // hdl is a series of custom update handlers, will be called sequentially after Manager is created and when config is changed.
-func New(proxy types.ConfigProxy, hdl ...types.ConfigUpdateHandler) (*Manager, error) {
+func New(proxy ConfigProxy, hdl ...ConfigUpdateHandler) (*Manager, error) {
 	opt := NewBootstrapOptionFromEnvFlag()
 	return NewWithOption(proxy, opt, hdl...)
 }
 
 // NewWithOption creates a new Manager instance with given BootstrapOption.
-func NewWithOption(proxy types.ConfigProxy, opt *BootstrapOption, hdl ...types.ConfigUpdateHandler) (*Manager, error) {
+func NewWithOption(proxy ConfigProxy, opt *BootstrapOption, hdl ...ConfigUpdateHandler) (*Manager, error) {
 	if err := validateParams(proxy, opt); err != nil {
 		return nil, err
 	}
@@ -48,7 +49,7 @@ func NewWithOption(proxy types.ConfigProxy, opt *BootstrapOption, hdl ...types.C
 }
 
 // Register registers extra event handlers after creation
-func (m *Manager) Register(hdl ...types.ConfigUpdateHandler) *Manager {
+func (m *Manager) Register(hdl ...ConfigUpdateHandler) *Manager {
 	m.handlers = append(m.handlers, hdl...)
 	return m
 }
@@ -59,7 +60,7 @@ func (m *Manager) readAndUpdate() error {
 	if err != nil {
 		return fmt.Errorf("error reading config: %w", err)
 	}
-	evt := types.Event{
+	evt := source.Event{
 		Md5:  utils.Md5(byt),
 		Data: byt,
 	}
@@ -67,7 +68,7 @@ func (m *Manager) readAndUpdate() error {
 }
 
 // onUpdate handles config update event
-func (m *Manager) onUpdate(evt types.Event) error {
+func (m *Manager) onUpdate(evt source.Event) error {
 	// Compare md5 and update time
 	if m.lastMd5 == evt.Md5 || evt.Data == nil {
 		m.lg.Trace("config was not changed and will be ignored (having the same md5 or was nil)")
@@ -153,7 +154,7 @@ func (m *Manager) watch() error {
 	return nil
 }
 
-func validateParams(proxy types.ConfigProxy, opt *BootstrapOption) error {
+func validateParams(proxy ConfigProxy, opt *BootstrapOption) error {
 	if proxy.Get() == nil {
 		return fmt.Errorf("config proxy should always return a valid config")
 	}
@@ -166,8 +167,7 @@ func validateParams(proxy types.ConfigProxy, opt *BootstrapOption) error {
 	return nil
 }
 
-func newManager(proxy types.ConfigProxy, opt *BootstrapOption, src types.ConfigSource, hdl ...types.ConfigUpdateHandler,
-) *Manager {
+func newManager(proxy ConfigProxy, opt *BootstrapOption, src source.ConfigSource, hdl ...ConfigUpdateHandler) *Manager {
 	m := &Manager{
 		opt:      opt,
 		src:      src,
@@ -184,7 +184,7 @@ func newManager(proxy types.ConfigProxy, opt *BootstrapOption, src types.ConfigS
 	return m
 }
 
-func withRecover(hdl types.ConfigUpdateHandler, prev, cur interface{}) (err error) {
+func withRecover(hdl ConfigUpdateHandler, prev, cur interface{}) (err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			err = fmt.Errorf("panic during config update: %v", re)

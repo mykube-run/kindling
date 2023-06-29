@@ -3,44 +3,51 @@ package source
 import (
 	"fmt"
 	"github.com/hashicorp/consul/api"
-	"github.com/mykube-run/kindling/pkg/types"
+	"github.com/mykube-run/kindling/pkg/log"
 	"github.com/mykube-run/kindling/pkg/utils"
+	"net"
 	"time"
 )
 
-type Consul struct {
-	lg        types.Logger
+type consul struct {
+	lg        log.Logger
 	key       string
 	client    *api.Client
-	eventC    chan types.Event
+	eventC    chan Event
 	closing   bool
 	lastIndex uint64
 }
 
-func NewConsulSource(addr string, group, key string, lg types.Logger) (types.ConfigSource, error) {
+func NewConsulSource(addr string, group, key string, lg log.Logger) (ConfigSource, error) {
 	cfg := api.DefaultConfig()
 	cfg.Address = addr
+	cfg.Transport.DialContext = (&net.Dialer{
+		Timeout:   60 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}).DialContext
+	cfg.Transport.ResponseHeaderTimeout = 90 * time.Second
+	cfg.Transport.ForceAttemptHTTP2 = false
 	client, err := api.NewClient(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create consul client: %w", err)
 	}
 
-	s := &Consul{
+	s := &consul{
 		lg:     lg,
 		key:    genKey(group, key),
-		eventC: make(chan types.Event, 1),
+		eventC: make(chan Event, 1),
 		client: client,
 	}
 	return s, nil
 }
 
-func (s *Consul) Read() ([]byte, error) {
+func (s *consul) Read() ([]byte, error) {
 	pair, meta, err := s.client.KV().Get(s.key, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config: %w", err)
 	}
 	if pair == nil {
-		return nil, fmt.Errorf("config key does not exist")
+		return nil, fmt.Errorf("config key (%v) does not exist", s.key)
 	}
 	if meta != nil {
 		s.lastIndex = meta.LastIndex
@@ -48,18 +55,18 @@ func (s *Consul) Read() ([]byte, error) {
 	return pair.Value, nil
 }
 
-func (s *Consul) Watch() (<-chan types.Event, error) {
+func (s *consul) Watch() (<-chan Event, error) {
 	go s.watch()
 	return s.eventC, nil
 }
 
-func (s *Consul) Close() error {
+func (s *consul) Close() error {
 	s.closing = true
 	close(s.eventC)
 	return nil
 }
 
-func (s *Consul) watch() {
+func (s *consul) watch() {
 	for {
 		if s.closing {
 			s.lg.Trace("consul watcher has been closed, stop watching")
@@ -79,7 +86,7 @@ func (s *Consul) watch() {
 		}
 		s.lastIndex = meta.LastIndex
 
-		e := types.Event{
+		e := Event{
 			Md5:  utils.Md5(pair.Value),
 			Data: pair.Value,
 		}

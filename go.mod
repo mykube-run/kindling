@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/serf v0.9.6 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mitchellh/mapstructure v1.4.3
-	github.com/nacos-group/nacos-sdk-go v1.1.0 // indirect
+	github.com/nacos-group/nacos-sdk-go v1.1.0
 	github.com/rs/zerolog v1.26.0
 	go.etcd.io/etcd/client/v3 v3.5.1
 	go.uber.org/atomic v1.9.0 // indirect

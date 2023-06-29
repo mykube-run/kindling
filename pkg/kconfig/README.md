@@ -8,7 +8,7 @@ Rather than another config-parsing library, instead `kconfig` aims to:
 - **hot reload & unmarshalling** on configuration change
 - encourage users to access configs via a single strong typing config instance
 
-Supported config format (as for now): 
+Supported config format (as for now):
 
 - json
 - yaml
@@ -102,7 +102,7 @@ type FeatureGateConfig struct {
 }
 ```
 
-#### 3. Implement `types.ConfigUpdateHandler` 
+#### 3. Implement `types.ConfigUpdateHandler`
 
 `handler.go`
 
@@ -178,17 +178,17 @@ Populate initial config with following value:
 
 ```json
 {
-    "api": {
-        "service_xxx_address": "localhost:8000"
-    },
-    "db": {
-        "address": "localhost:3306",
-        "username": "test",
-        "password": "test"
-    },
-    "feature_gate": {
-        "enable_xxx": false
-    }
+     "api": {
+          "service_xxx_address": "localhost:8000"
+     },
+     "db": {
+          "address": "localhost:3306",
+          "username": "test",
+          "password": "test"
+     },
+     "feature_gate": {
+          "enable_xxx": false
+     }
 }
 ```
 

@@ -1,4 +1,10 @@
-package types
+package source
+
+// Event represents a config update event. Md5 can be used to filter repeat events.
+type Event struct {
+	Md5  string
+	Data []byte
+}
 
 // ConfigSource is the underlying config source for kconfig, responsible for
 // reading config data and watching changes.
@@ -17,9 +23,3 @@ const (
 	Consul ConfigSourceType = "consul"
 	Nacos  ConfigSourceType = "nacos"
 )
-
-// Event represents a config update event. Md5 can be used to filter repeat events.
-type Event struct {
-	Md5  string
-	Data []byte
-}

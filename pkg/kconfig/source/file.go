@@ -3,34 +3,34 @@ package source
 import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
-	"github.com/mykube-run/kindling/pkg/types"
+	"github.com/mykube-run/kindling/pkg/log"
 	"github.com/mykube-run/kindling/pkg/utils"
 	"io"
 	"os"
 )
 
-type File struct {
+type file struct {
 	key     string
 	watcher *fsnotify.Watcher
-	eventC  chan types.Event
+	eventC  chan Event
 	closing bool
-	lg      types.Logger
+	lg      log.Logger
 }
 
-func NewFileSource(key string, lg types.Logger) (types.ConfigSource, error) {
+func NewFileSource(key string, lg log.Logger) (ConfigSource, error) {
 	_, err := os.Stat(key)
 	if err != nil {
 		return nil, fmt.Errorf("invalid config file %v: %w", key, err)
 	}
-	s := &File{
+	s := &file{
 		key:    key,
-		eventC: make(chan types.Event, 1),
+		eventC: make(chan Event, 1),
 		lg:     lg,
 	}
 	return s, nil
 }
 
-func (s *File) Read() ([]byte, error) {
+func (s *file) Read() ([]byte, error) {
 	byt, err := s.read()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file %v: %w", s.key, err)
@@ -38,7 +38,7 @@ func (s *File) Read() ([]byte, error) {
 	return byt, nil
 }
 
-func (s *File) Watch() (<-chan types.Event, error) {
+func (s *file) Watch() (<-chan Event, error) {
 	if w, err := fsnotify.NewWatcher(); err != nil {
 		return nil, fmt.Errorf("failed to initialize watcher: %w", err)
 	} else {
@@ -69,7 +69,7 @@ func (s *File) Watch() (<-chan types.Event, error) {
 	return s.eventC, s.watcher.Add(s.key)
 }
 
-func (s *File) Close() error {
+func (s *file) Close() error {
 	s.closing = true
 	if s.watcher != nil {
 		return s.watcher.Close()
@@ -78,7 +78,7 @@ func (s *File) Close() error {
 	return nil
 }
 
-func (s *File) read() ([]byte, error) {
+func (s *file) read() ([]byte, error) {
 	fn, err := os.OpenFile(s.key, os.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
@@ -92,13 +92,13 @@ func (s *File) read() ([]byte, error) {
 	return byt, nil
 }
 
-func (s *File) handleEvent(evt fsnotify.Event) {
+func (s *file) handleEvent(evt fsnotify.Event) {
 	byt, err := s.read()
 	if err != nil {
 		s.lg.Error(fmt.Sprintf("failed to read updated config: %v", err))
 		return
 	}
-	e := types.Event{
+	e := Event{
 		Md5:  utils.Md5(byt),
 		Data: byt,
 	}

@@ -3,14 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/mykube-run/kindling/cmd/kconfig-example/config"
-	"github.com/mykube-run/kindling/pkg/types"
+	"github.com/mykube-run/kindling/pkg/kconfig"
 )
 
 // db demonstrates how database is reconnected,
 // it would be a DB SINGLETON POINTER in real code
 var db string
 
-var hdl1 = types.ConfigUpdateHandler{
+var hdl1 = kconfig.ConfigUpdateHandler{
 	Name: "database",
 	Handle: func(prev, cur interface{}) error {
 		fmt.Printf("* previous config: %+v\n", prev)
@@ -31,7 +31,7 @@ var hdl1 = types.ConfigUpdateHandler{
 	},
 }
 
-var hdl2 = types.ConfigUpdateHandler{
+var hdl2 = kconfig.ConfigUpdateHandler{
 	Name: "feature gate",
 	Handle: func(prev, cur interface{}) error {
 		pc, _ := prev.(config.Sample)

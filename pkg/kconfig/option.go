@@ -3,7 +3,8 @@ package kconfig
 import (
 	"flag"
 	"fmt"
-	"github.com/mykube-run/kindling/pkg/types"
+	"github.com/mykube-run/kindling/pkg/kconfig/source"
+	"github.com/mykube-run/kindling/pkg/log"
 	"github.com/mykube-run/kindling/pkg/utils"
 	"os"
 	"strconv"
@@ -12,14 +13,14 @@ import (
 
 // BootstrapOption is used to specify config source (and other additional) options.
 type BootstrapOption struct {
-	Type            types.ConfigSourceType
+	Type            source.ConfigSourceType
 	Format          string
 	Addrs           []string
 	Namespace       string
 	Group           string
 	Key             string
 	MinimalInterval time.Duration
-	Logger          types.Logger
+	Logger          log.Logger
 }
 
 // NewBootstrapOption initializes a bootstrap config option
@@ -27,21 +28,23 @@ func NewBootstrapOption() *BootstrapOption {
 	return &BootstrapOption{
 		Format:          "json",
 		MinimalInterval: time.Second * 5,
-		Logger:          types.DefaultLogger,
+		Logger:          log.DefaultLogger,
 	}
 }
 
 // NewBootstrapOptionFromEnvFlag initializes a bootstrap config option from environments & flags.
 // Flag value has higher priority when both given in environments & flags.
-// Note: Flags are parsed once this function is called.
-func NewBootstrapOptionFromEnvFlag() *BootstrapOption {
+// NOTE:
+//		1) Flags are parsed once this function is called.
+// 		2) Customize this function if needed
+var NewBootstrapOptionFromEnvFlag = func() *BootstrapOption {
 	opt := NewBootstrapOption()
 	opt.parseEnvFlags()
 	return opt
 }
 
 // WithType specifies config source type
-func (opt *BootstrapOption) WithType(typ types.ConfigSourceType) *BootstrapOption {
+func (opt *BootstrapOption) WithType(typ source.ConfigSourceType) *BootstrapOption {
 	opt.Type = typ
 	return opt
 }
@@ -92,7 +95,7 @@ func (opt *BootstrapOption) WithMinimalInterval(v time.Duration) *BootstrapOptio
 }
 
 // WithLogger specifies a custom logger to the option
-func (opt *BootstrapOption) WithLogger(lg types.Logger) *BootstrapOption {
+func (opt *BootstrapOption) WithLogger(lg log.Logger) *BootstrapOption {
 	opt.Logger = lg
 	return opt
 }
@@ -103,7 +106,7 @@ func (opt *BootstrapOption) Validate() error {
 		return fmt.Errorf("config source type not provided")
 	}
 	switch opt.Type {
-	case types.Consul, types.Etcd:
+	case source.Consul, source.Etcd:
 		if len(opt.Addrs) == 0 {
 			return fmt.Errorf("config source address not provided")
 		}
@@ -135,7 +138,7 @@ func (opt *BootstrapOption) parseEnvFlags() {
 		flag.Parse()
 	}
 
-	otyp := types.ConfigSourceType(utils.If(*typ != "", *typ, os.Getenv("CONF_TYPE")).(string))
+	otyp := source.ConfigSourceType(utils.If(*typ != "", *typ, os.Getenv("CONF_TYPE")).(string))
 	oformat := utils.If(*format != "", *format, os.Getenv("CONF_FORMAT")).(string)
 	oip := utils.If(*ip != "", *ip, os.Getenv("CONF_IP")).(string)
 	oport := utils.If(*port != "", *port, os.Getenv("CONF_PORT")).(string)
