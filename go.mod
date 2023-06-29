@@ -3,6 +3,7 @@ module github.com/mykube-run/kindling
 go 1.16
 
 require (
+	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/google/btree v1.0.0 // indirect
 	github.com/hashicorp/consul/api v1.11.0
