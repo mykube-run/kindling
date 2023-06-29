@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1
+	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/hashicorp/consul/api v1.11.0
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -15,6 +16,7 @@ require (
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/nacos-group/nacos-sdk-go v1.1.0
+	github.com/panjf2000/ants/v2 v2.7.5 // indirect
 	github.com/rs/zerolog v1.26.0
 	go.etcd.io/etcd/client/v3 v3.5.1
 	go.uber.org/atomic v1.9.0 // indirect
@@ -26,5 +28,5 @@ require (
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	google.golang.org/grpc v1.42.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 )
