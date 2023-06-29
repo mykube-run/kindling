@@ -1,8 +1,8 @@
-package kconfig
+package konfig
 
 import (
 	"fmt"
-	"github.com/mykube-run/kindling/pkg/kconfig/source"
+	"github.com/mykube-run/kindling/pkg/konfig/source"
 )
 
 func NewConfigSource(opt *BootstrapOption) (source.ConfigSource, error) {

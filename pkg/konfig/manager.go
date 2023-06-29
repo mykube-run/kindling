@@ -1,10 +1,10 @@
-package kconfig
+package konfig
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
-	"github.com/mykube-run/kindling/pkg/kconfig/source"
+	"github.com/mykube-run/kindling/pkg/konfig/source"
 	"github.com/mykube-run/kindling/pkg/log"
 	"github.com/mykube-run/kindling/pkg/utils"
 	"gopkg.in/yaml.v3"

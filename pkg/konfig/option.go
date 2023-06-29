@@ -1,9 +1,9 @@
-package kconfig
+package konfig
 
 import (
 	"flag"
 	"fmt"
-	"github.com/mykube-run/kindling/pkg/kconfig/source"
+	"github.com/mykube-run/kindling/pkg/konfig/source"
 	"github.com/mykube-run/kindling/pkg/log"
 	"github.com/mykube-run/kindling/pkg/utils"
 	"os"

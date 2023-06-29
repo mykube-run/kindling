@@ -1,10 +1,10 @@
 package config
 
 import (
-	"github.com/mykube-run/kindling/pkg/kconfig"
+	"github.com/mykube-run/kindling/pkg/konfig"
 )
 
-// Proxy kconfig proxy
+// Proxy konfig proxy
 // --------------------
 var Proxy = &proxy{c: new(Sample)}
 
@@ -20,6 +20,6 @@ func (p *proxy) Populate(fn func(interface{}) error) error {
 	return fn(p.c)
 }
 
-func (p *proxy) New() kconfig.ConfigProxy {
+func (p *proxy) New() konfig.ConfigProxy {
 	return &proxy{c: new(Sample)}
 }

@@ -1,4 +1,4 @@
-package kconfig
+package konfig
 
 import (
 	"os"

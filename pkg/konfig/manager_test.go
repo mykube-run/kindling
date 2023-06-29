@@ -1,10 +1,10 @@
-package kconfig
+package konfig
 
 import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/consul/api"
-	"github.com/mykube-run/kindling/pkg/kconfig/source"
+	"github.com/mykube-run/kindling/pkg/konfig/source"
 	"github.com/nacos-group/nacos-sdk-go/clients"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"

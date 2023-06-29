@@ -1,7 +1,7 @@
-package kconfig
+package konfig
 
 // ConfigProxy is a proxy for user's business config, defining the way
-// user's config is accessed & modified by kconfig.Manager, as well as
+// user's config is accessed & modified by konfig.Manager, as well as
 // how to generate a brand-new config proxy.
 //
 // When configuration was updated, a kconfig manager will:

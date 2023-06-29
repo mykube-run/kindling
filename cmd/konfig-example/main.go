@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/mykube-run/kindling/cmd/kconfig-example/config"
-	"github.com/mykube-run/kindling/pkg/kconfig"
+	"github.com/mykube-run/kindling/cmd/konfig-example/config"
+	"github.com/mykube-run/kindling/pkg/konfig"
 	"log"
 	"time"
 )
 
 func main() {
-	_, err := kconfig.New(config.Proxy, hdl1, hdl2)
+	_, err := konfig.New(config.Proxy, hdl1, hdl2)
 	if err != nil {
 		log.Fatalf("failed to create new config manager: %v", err)
 	}
