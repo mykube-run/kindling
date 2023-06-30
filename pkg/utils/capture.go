@@ -1,6 +1,11 @@
 package utils
 
-import "fmt"
+import (
+	"fmt"
+	"path"
+	"strconv"
+	"strings"
+)
 
 func GetRate(interval float32) float32 {
 	if interval == 0 {
@@ -58,4 +63,14 @@ func GetMaxFrameLimit(max int, rate float32) int {
 		return int(float32(max) / rate)
 	}
 	return max * int(1/rate)
+}
+
+func FilePath2Index(in string) (int64, error) {
+	fn := strings.ReplaceAll(path.Base(in), path.Ext(in), "")
+	out, err := strconv.ParseInt(fn, 10, 0)
+	return out, err
+}
+
+func FilePath2Suffix(in string) string {
+	return strings.TrimLeft(path.Ext(in), ".")
 }

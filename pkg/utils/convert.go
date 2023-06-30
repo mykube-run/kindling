@@ -2,9 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"path"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -18,17 +15,8 @@ func MapKeys(m map[string]interface{}) []string {
 	return keys
 }
 
-func FilePath2Index(in string) (int64, error) {
-	fn := strings.ReplaceAll(path.Base(in), path.Ext(in), "")
-	out, err := strconv.ParseInt(fn, 10, 0)
-	return out, err
-}
-
-func FilePath2Suffix(in string) string {
-	return strings.TrimLeft(path.Ext(in), ".")
-}
-
-func KVStringsToMap(in ...string) map[string]string {
+// KVStrings2Map converts string pairs to map
+func KVStrings2Map(in ...string) map[string]string {
 	out := make(map[string]string)
 	if len(in) == 0 {
 		return out
