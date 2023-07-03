@@ -29,8 +29,9 @@ const (
 	// Reconnect options.
 	// NOTE:
 	//		- Some reconnect options are not supported by FFmpeg v3
+	//		- The reconnect_on_network_error option is not supported by FFmpeg v4.3
 	//		- The reconnect_at_eof may cause endless retry, must not be added here
-	reconnect = "-reconnect 1 -reconnect_on_network_error 1 -reconnect_streamed 1 -reconnect_delay_max 2"
+	reconnect = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2"
 	// Timeout for IO operations (in microseconds)
 	rwTimeout = "-rw_timeout %v"
 	// filterInterval instructs FFmpeg to capture frames every n seconds, note that there is a pkt_duration_time mistake, meaning
